@@ -17,7 +17,9 @@
   },
   "homepage": "https://github.com/BenjaminFrench/sql-storefront#readme",
   "dependencies": {
+    "chalk": "^2.3.0",
     "inquirer": "^5.1.0",
-    "mysql": "^2.15.0"
+    "mysql": "^2.15.0",
+    "table": "^4.0.2"
   }
 }
