@@ -38,12 +38,16 @@ const start = function() {
             ]
         )
     })
-    .then(answers => {
+    .then( answers => {
         var itemID = answers.itemID;
         var itemQuantity = answers.itemQuantity;
 
         return placeOrder(itemID, itemQuantity)
             // sqlConnection.end();
+    })
+    .catch( result => {
+        console.log(result);
+        console.log();
     })
     .then( result => {
         return inquirer.prompt(
@@ -117,14 +121,14 @@ const placeOrder = function(itemId, itemQuantity) {
                     });
                 }
                 else {
-                    console.log('Not enough in stock to place order!');
-                    console.log();
+                    // console.log('Not enough in stock to place order!');
+                    // console.log();
                     reject('Not enough in stock');
                 }
             }
             else {
-                console.log('ItemID not found');
-                console.log();
+                // console.log('ItemID not found');
+                // console.log();
                 reject('Item ID not found');
             }
         });
