@@ -11,9 +11,16 @@ const sqlConnection = mysql.createConnection({
     database: "bamazon"
 });
 
-const start = function() {
-    // inquirer.prompt()
+sqlConnection.connect(function(err) {
+    if (err) {
+        console.error('error connecting: ' + err.stack);
+        return;
+    }
 
+    // console.log('connected as id ' + sqlConnection.threadId);
+});
+
+const start = function() {
     printItemList()
     .then( () => {
         return inquirer.prompt(
@@ -39,10 +46,23 @@ const start = function() {
             // sqlConnection.end();
     })
     .then( result => {
-        start();
+        return inquirer.prompt(
+            {
+                type: 'list',
+                name: 'action',
+                message: 'What next?',
+                choices: ['Make another purchase' , 'Quit']
+            }
+        )
+    })
+    .then( answers => {
+        if (answers.action === 'Make another purchase') {
+            start();
+        }
+        else if (answers.action === 'Quit') {
+            process.exit(0);
+        }
     });
-    
-
 }
 
 const printItemList = function() {
@@ -97,14 +117,16 @@ const placeOrder = function(itemId, itemQuantity) {
                     });
                 }
                 else {
-                    console.log('Not enough in stock to place order');
+                    console.log('Not enough in stock to place order!');
+                    console.log();
+                    reject('Not enough in stock');
                 }
             }
             else {
                 console.log('ItemID not found');
+                console.log();
+                reject('Item ID not found');
             }
-            console.log();
-            resolve();
         });
     });
 }
