@@ -11,33 +11,32 @@ const sqlConnection = mysql.createConnection({
     database: "bamazon"
 });
 
-const start = function() {
+const start = async function() {
     // inquirer.prompt()
 
-    printItemList().then( () => {
-        inquirer.prompt(
-            [
-                {
-                    type: 'input',
-                    name: 'itemID',
-                    message: 'Please enter the ID of the item you would like to purchase.'
-                },
-                {
-                    type: 'input',
-                    name: 'itemQuantity',
-                    message: 'Please enter quantity you would like to purchase.'
-                }
-            ]
-        )
-        .then(answers => {
-            var itemID = answers.itemID;
-            var itemQuantity = answers.itemQuantity;
-
-            placeOrder(itemID, itemQuantity);
-            // sqlConnection.end();
-            // start();
-        });
-    })
+    await printItemList();
+    var answers = await inquirer.prompt(
+        [
+            {
+                type: 'input',
+                name: 'itemID',
+                message: 'Please enter the ID of the item you would like to purchase.'
+            },
+            {
+                type: 'input',
+                name: 'itemQuantity',
+                message: 'Please enter quantity you would like to purchase.'
+            }
+        ]
+    )
+    // .then(answers => {
+        
+    //     // sqlConnection.end();
+    // });
+    var itemID = answers.itemID;
+    var itemQuantity = answers.itemQuantity;
+    await placeOrder(itemID, itemQuantity);
+    start();
     
 
 }
@@ -75,27 +74,31 @@ const printItemList = function() {
 }
 
 const placeOrder = function(itemId, itemQuantity) {
-    sqlConnection.query("SELECT price, stock_quantity FROM products WHERE item_id=?", [itemId], function (err, res) {
-        if (err) throw err;
-        // Log all results of the SELECT statement
-        if (res.length === 1) {
-            var total_price = res[0].price * itemQuantity;
-            if (itemQuantity <= res[0].stock_quantity) {
-                var newQuantity = res[0].stock_quantity - itemQuantity;
-                console.log('Placing Order...');
-                sqlConnection.query('UPDATE products SET stock_quantity=? WHERE item_id=?', [newQuantity, itemId], function (err, res) {
-                    if (err) throw err;
-                    console.log('Order Placed!');
-                    console.log("Cost of order = $%s", total_price.toFixed(2));
-                });
+    return new Promise( (resolve, reject) => {
+        sqlConnection.query("SELECT price, stock_quantity FROM products WHERE item_id=?", [itemId], function (err, res) {
+            if (err) reject(Error(err));
+            // Log all results of the SELECT statement
+            if (res.length === 1) {
+                var total_price = res[0].price * itemQuantity;
+                if (itemQuantity <= res[0].stock_quantity) {
+                    var newQuantity = res[0].stock_quantity - itemQuantity;
+                    console.log('Placing Order...');
+                    sqlConnection.query('UPDATE products SET stock_quantity=? WHERE item_id=?', [newQuantity, itemId], function (err, res) {
+                        if (err) reject(Error(err));
+                        console.log('Order Placed!');
+                        console.log("Cost of order = $%s", total_price.toFixed(2));
+                        resolve();
+                    });
+                }
+                else {
+                    console.log('Not enough in stock to place order');
+                }
             }
             else {
-                console.log('Not enough in stock to place order');
+                console.log('ItemID not found');
             }
-        }
-        else {
-            console.log('ItemID not found');
-        }
+            resolve();
+        });
     });
 }
 
