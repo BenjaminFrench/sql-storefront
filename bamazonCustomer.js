@@ -43,7 +43,6 @@ const start = function() {
         var itemQuantity = answers.itemQuantity;
 
         return placeOrder(itemID, itemQuantity)
-            // sqlConnection.end();
     })
     .catch( result => {
         console.log(result);
@@ -64,6 +63,7 @@ const start = function() {
             start();
         }
         else if (answers.action === 'Quit') {
+            sqlConnection.end();
             process.exit(0);
         }
     });
