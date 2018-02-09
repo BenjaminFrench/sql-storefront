@@ -5,7 +5,7 @@ const chalk = require('chalk');
 
 const sqlConnection = mysql.createConnection({
     host: "localhost",
-    port: 3306,
+    port: 8889,
     user: "root",
     password: "root",
     database: "bamazon"
@@ -14,8 +14,9 @@ const sqlConnection = mysql.createConnection({
 const start = function() {
     // inquirer.prompt()
 
-    printItemList().then( () => {
-        inquirer.prompt(
+    printItemList()
+    .then( () => {
+        return inquirer.prompt(
             [
                 {
                     type: 'input',
@@ -29,15 +30,17 @@ const start = function() {
                 }
             ]
         )
-        .then(answers => {
-            var itemID = answers.itemID;
-            var itemQuantity = answers.itemQuantity;
-
-            placeOrder(itemID, itemQuantity);
-            // sqlConnection.end();
-            // start();
-        });
     })
+    .then(answers => {
+        var itemID = answers.itemID;
+        var itemQuantity = answers.itemQuantity;
+
+        return placeOrder(itemID, itemQuantity)
+            // sqlConnection.end();
+    })
+    .then( result => {
+        start();
+    });
     
 
 }
@@ -75,27 +78,34 @@ const printItemList = function() {
 }
 
 const placeOrder = function(itemId, itemQuantity) {
-    sqlConnection.query("SELECT price, stock_quantity FROM products WHERE item_id=?", [itemId], function (err, res) {
-        if (err) throw err;
-        // Log all results of the SELECT statement
-        if (res.length === 1) {
-            var total_price = res[0].price * itemQuantity;
-            if (itemQuantity <= res[0].stock_quantity) {
-                var newQuantity = res[0].stock_quantity - itemQuantity;
-                console.log('Placing Order...');
-                sqlConnection.query('UPDATE products SET stock_quantity=? WHERE item_id=?', [newQuantity, itemId], function (err, res) {
-                    if (err) throw err;
-                    console.log('Order Placed!');
-                    console.log("Cost of order = $%s", total_price.toFixed(2));
-                });
+    return new Promise( (resolve, reject) => {
+        sqlConnection.query("SELECT price, stock_quantity FROM products WHERE item_id=?", [itemId], function (err, res) {
+            if (err) reject(Error(err));
+            // Log all results of the SELECT statement
+            console.log();
+            if (res.length === 1) {
+                var total_price = res[0].price * itemQuantity;
+                if (itemQuantity <= res[0].stock_quantity) {
+                    var newQuantity = res[0].stock_quantity - itemQuantity;
+                    console.log('Placing Order...');
+                    sqlConnection.query('UPDATE products SET stock_quantity=? WHERE item_id=?', [newQuantity, itemId], function (err, res) {
+                        if (err) reject(Error(err));
+                        console.log('Order Placed!');
+                        console.log("Cost of order = $ " + chalk.green.bold(total_price.toFixed(2).toString()));
+                        console.log();
+                        resolve();
+                    });
+                }
+                else {
+                    console.log('Not enough in stock to place order');
+                }
             }
             else {
-                console.log('Not enough in stock to place order');
+                console.log('ItemID not found');
             }
-        }
-        else {
-            console.log('ItemID not found');
-        }
+            console.log();
+            resolve();
+        });
     });
 }
 
