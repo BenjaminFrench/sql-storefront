@@ -5,7 +5,7 @@ const chalk = require('chalk');
 
 const sqlConnection = mysql.createConnection({
     host: "localhost",
-    port: 8889,
+    port: 3306,
     user: "root",
     password: "root",
     database: "bamazon"
@@ -158,7 +158,6 @@ const printLowInventory = function() {
                     chalk.underline.bold('Stock')
                 ]
             );
-            console.log(res.length);
             res.forEach( element => {
                 data.push(
                     [
