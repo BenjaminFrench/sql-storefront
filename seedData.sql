@@ -22,3 +22,12 @@ VALUES ("Kindle", "Electronics", 99.99, 100),
 ("Stranger In A Strange Land", "Books", 8.99, 20),
 ("The Catcher In The Rye", "Books", 5.69, 20),
 ("One Flew Over the Cuckoo's Nest", "Books", 9.99, 20);
+
+INSERT INTO departments (department_name, over_head_costs)
+VALUES ("Electronics", 23000),
+("Toys and Games", 2000)
+("Groceries", 4000)
+("Sports and Outdoors", 5000)
+("Home Improvement", 1000)
+("Beauty and Health", 2000)
+("Books", 1000);
