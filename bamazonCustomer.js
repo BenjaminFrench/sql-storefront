@@ -45,7 +45,7 @@ const start = function() {
         return placeOrder(itemID, itemQuantity)
     })
     .catch( result => {
-        console.log(result);
+        console.log(chalk.red(result));
         console.log();
     })
     .then( result => {
@@ -112,7 +112,7 @@ const placeOrder = function(itemId, itemQuantity) {
                 if (itemQuantity <= res[0].stock_quantity) {
                     var newQuantity = res[0].stock_quantity - itemQuantity;
                     console.log('Placing Order...');
-                    sqlConnection.query('UPDATE products SET stock_quantity=? WHERE item_id=?', [newQuantity, itemId], function (err, res) {
+                    sqlConnection.query('UPDATE products SET stock_quantity=?, product_sales = product_sales + ? WHERE item_id=?', [newQuantity, total_price, itemId], function (err, res) {
                         if (err) reject(Error(err));
                         console.log('Order Placed!');
                         console.log("Cost of order = $ " + chalk.green.bold(total_price.toFixed(2).toString()));
