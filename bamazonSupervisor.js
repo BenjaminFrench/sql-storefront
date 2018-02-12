@@ -38,11 +38,11 @@ const start = function() {
         var action = answers.action;
         switch (action) {
             case 'View Product Sales by Department':
-                return printItemList();
+                return viewProductSalesByDepartment();
                 break;
 
             case 'Create New Department':
-                return printLowInventory();
+                return addNewDepartment();
                 break;
 
             case 'Quit':
@@ -63,42 +63,76 @@ const start = function() {
     });
 }
 
-const viewProductSalesByDepartment = function () {
+const addNewDepartment = function() {
     return new Promise( (resolve, reject) => {
+        inquirer.prompt(
+            [
+                {
+                    type: 'input',
+                    name: 'departmentName',
+                    message: 'New Department name.'
+                },
+                {
+                    type: 'input',
+                    name: 'departmentOverhead',
+                    message: 'New department overhead'
+                }
+            ]
+        )
+        .then( answers => { 
+            sqlConnection.query("INSERT INTO departments (department_name, over_head_costs) VALUES (?, ?)", [answers.departmentName, answers.departmentOverhead], function (err, res) {
+                if (err) reject(Error(err));
 
+                if (res.affectedRows < 1) return reject('Item not added.');
+
+                console.log(res.affectedRows + ' department added');
+                resolve();
+            });
+        });
     });
 }
 
-const printItemList = function () {
+const viewProductSalesByDepartment = function () {
     return new Promise( (resolve, reject) => {
-        sqlConnection.query("SELECT * FROM products", function (err, res) {
+        sqlConnection.query(`SELECT 
+                                departments.department_id,
+                                departments.department_name,
+                                departments.over_head_costs,
+                                SUM(products.product_sales) AS 'product_sales',
+                                (SUM(products.product_sales) - departments.over_head_costs) AS 'total_profit'
+                            FROM
+                                departments
+                                    LEFT JOIN
+                                products ON products.department_name = departments.department_name
+                            GROUP BY departments.department_name , departments.department_id , departments.over_head_costs
+                            ORDER BY departments.department_id ASC`, function (err, res) {
             if (err) reject(Error(err));
             // Log all results of the SELECT statement
             var data = [];
             data.push(
                 [
-                    chalk.underline.bold('ID'),
-                    chalk.underline.bold('Name'),
+                    chalk.underline.bold('Department ID'),
                     chalk.underline.bold('Department Name'),
-                    chalk.underline.bold('Price'),
-                    chalk.underline.bold('Stock')
+                    chalk.underline.bold('Overhead Costs'),
+                    chalk.underline.bold('Product Sales'),
+                    chalk.underline.bold('Total Profit')
                 ]
             );
             res.forEach(element => {
                 data.push(
                     [
-                        element.item_id,
-                        element.product_name,
+                        element.department_id,
                         element.department_name,
-                        element.price,
-                        element.stock_quantity
+                        element.over_head_costs,
+                        element.product_sales,
+                        element.total_profit
                     ]
                 );
             });
             console.log(table(data));
             resolve();
         });
-    })
+    });
 }
 
 start();
