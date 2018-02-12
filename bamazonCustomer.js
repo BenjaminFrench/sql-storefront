@@ -45,7 +45,7 @@ const start = function() {
         return placeOrder(itemID, itemQuantity)
     })
     .catch( result => {
-        console.log(result);
+        console.log(chalk.red(result));
         console.log();
     })
     .then( result => {
